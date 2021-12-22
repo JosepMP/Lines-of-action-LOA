@@ -19,13 +19,14 @@ import static java.lang.Math.min;
  * Jugador humà de LOA
  * @author bernat
  */
-public class KOI implements IPlayer, IAuto {
+public class KOITimeout implements IPlayer, IAuto {
 
     String name;
     private CellType _mi_color;
-    private int profundidad;
-    private Move _movElegido;
+    //private int profundidad;
+    private Move _movElegido, _moveAux;
     int nodosExp;
+    boolean _time;
     
     int[][] tableroP = new int[][]{
                     {-80, -25, -20, -20, -20, -20, -25, -80},
@@ -38,9 +39,9 @@ public class KOI implements IPlayer, IAuto {
                     {-80, -25, -20, -20, -20, -20, -25, -80}
             };
     
-    public KOI(String name, int prof ) {
+    public KOITimeout(String name ) {
         this.name = name;
-        this.profundidad = prof;
+        
     }
 
     /**
@@ -55,20 +56,30 @@ public class KOI implements IPlayer, IAuto {
         GameStatus aux = new GameStatus(s);
         _mi_color = s.getCurrentPlayer();
         nodosExp = 0;
+        _time = true;
+        int profundidad = 1;
         System.out.println("Nosotros somos " + _mi_color + " enemigo es " + opposite(_mi_color));
         //minmax(aux, profundidad, _mi_color , true , Integer.MIN_VALUE, Integer.MAX_VALUE);
-        minimax(aux, _mi_color, profundidad);
+        while(_time) {
+            minimax(aux, _mi_color, profundidad);
+            if(_time) {
+                _movElegido = _moveAux;
+            }
+            profundidad++;
+        }
         System.out.println(nodosExp);
         long nodos = (long) nodosExp; 
         _movElegido.setNumerOfNodesExplored(nodos);
         return _movElegido;
     }
+   
+     
     
      public int minimax(GameStatus tauler, CellType color, int profundidad){
          
         //valoracionMaxima guarda la mejor valoracion obtenida hasta el momento
         int valoracionMaxima = Integer.MIN_VALUE;
-
+        
          
         Move moveAux;
         ArrayList<Point> fichasAliadas = new ArrayList<>();
@@ -100,7 +111,7 @@ public class KOI implements IPlayer, IAuto {
             nodosExp++;
             
             if(aux.GetWinner() == color ) {
-                _movElegido = m;
+                _moveAux = m;
                 return valoracionMaxima;
             }
            
@@ -108,9 +119,12 @@ public class KOI implements IPlayer, IAuto {
             int valor = min(aux, opposite(color), Integer.MIN_VALUE, Integer.MAX_VALUE, profundidad-1, valoracionMaxima);
 
             //Si la valoración obtenida supera la valoración máxima guardada, substituimos la nueva valoración máxima
+            if(_time == false) {
+                break;
+            }
             if(valor >= valoracionMaxima){
                 valoracionMaxima = valor;
-                _movElegido = m;
+                _moveAux = m;
             }
         }
         
@@ -179,6 +193,9 @@ public class KOI implements IPlayer, IAuto {
 
                    if(beta <= alpha ) {
 
+                       break;
+                   }
+                   if(_time == false) {
                        break;
                    }
                }
@@ -259,13 +276,12 @@ public class KOI implements IPlayer, IAuto {
                   if(beta <= alpha ) {                    
                       break;
                   }
+                  
+                   if(_time == false) {
+                       break;
+                   }                  
               }
-                /*beta = Math.min(beta, valor);
-                
-                //Aplicamos la poda alpha beta
-                if(alpha >= beta){
-                    break;
-                } */
+
             }
         }
         
@@ -356,7 +372,7 @@ public class KOI implements IPlayer, IAuto {
     @Override
     public void timeout() {
         // Bah! Humans do not enjoy timeouts, oh, poor beasts !
-        //System.out.println("Bah! You are so slow...");
+        _time = false;
     }
 
     /**
@@ -402,8 +418,11 @@ public class KOI implements IPlayer, IAuto {
         phashe->profundidad = profundidad;
     }*/
     
-   
     
+
+
 }
+
+
 
 

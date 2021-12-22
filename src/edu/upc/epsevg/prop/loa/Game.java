@@ -21,11 +21,12 @@ public class Game {
             @Override
             public void run() {
                 
-                IPlayer player1 = new KOI("Dembele",2);
+                //IPlayer player1 = new KOI("Messi",2);
+                IPlayer player1 = new KOITimeout("Dembele");
                 //IPlayer player1 = new RandomPlayer("Crazy Chris");
                 //IPlayer player1 = new HumanPlayer("Josep");
                 IPlayer player2 = new MCCloudPlayer();             
-                new Board(player1 , player2, 4, Level.DIFFICULT);
+                new Board(player1 , player2, 2, Level.DIFFICULT);
              }
         });
     }
