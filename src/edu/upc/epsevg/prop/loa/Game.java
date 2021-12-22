@@ -21,10 +21,10 @@ public class Game {
             @Override
             public void run() {
                 
-                IPlayer player1 = new KOI("Octopus",2);
+                IPlayer player1 = new KOI("Dembele",2);
                 //IPlayer player1 = new RandomPlayer("Crazy Chris");
-                IPlayer player2 = new RandomPlayer("Crazy Ivan");
-                                
+                //IPlayer player1 = new HumanPlayer("Josep");
+                IPlayer player2 = new MCCloudPlayer();             
                 new Board(player1 , player2, 4, Level.DIFFICULT);
              }
         });
