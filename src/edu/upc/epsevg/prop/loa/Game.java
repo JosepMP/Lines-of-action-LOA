@@ -26,7 +26,7 @@ public class Game {
                 //IPlayer player1 = new RandomPlayer("Crazy Chris");
                 //IPlayer player1 = new HumanPlayer("Josep");
                 IPlayer player2 = new MCCloudPlayer();             
-                new Board(player1 , player2, 2, Level.DIFFICULT);
+                new Board(player1 , player2, 3, Level.DIFFICULT);
              }
         });
     }

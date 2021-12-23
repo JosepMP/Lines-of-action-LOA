@@ -15,19 +15,24 @@ import java.util.ArrayList;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
+
+
+
 /**
- * Jugador humà de LOA
- * @author bernat
+ * Jugador IA de LOA
+ * @author Roger Tarres Mercader
+ * @author Josep Marches Parra
  */
 public class KOI implements IPlayer, IAuto {
-
-    String name;
-    private CellType _mi_color;
-    private int profundidad;
-    private Move _movElegido;
-    int nodosExp;
     
-    int[][] tableroP = new int[][]{
+   
+    String _name;               //Variable global con el nombre de nuestro jugador.      
+    private CellType _mi_color; //Variable global con el color de nuestro jugador.     
+    private int _profundidad;   //Variable global con la profundidad de nuestro juego.
+    private Move _movElegido;   //Variable global con el movimiento que elegiremos para nuestro juego.
+    int _nodosExp;              //Variable global con el contador de nodos que exploramos.
+    
+    int[][] tableroP = new int[][]{ //8x8
                     {-80, -25, -20, -20, -20, -20, -25, -80},
                     {-25,  10,  10,  10,  10,  10,  10,  -25},
                     {-20,  10,  25,  25,  25,  25,  10,  -20},
@@ -38,156 +43,167 @@ public class KOI implements IPlayer, IAuto {
                     {-80, -25, -20, -20, -20, -20, -25, -80}
             };
     
+    int[][] tableroP10 = new int[][]{ //10 x 10
+                    {-80, -25, -20, -20, -20, -20, -20, -20 , -25, -80},
+                    {-25,  10,  10,  10,  10,  10,  10, 10 , 10, -25},
+                    {-20,  10,  25,  25,  25,  25, 25, 25, 10, -20},
+                    {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  50,  50,  50, 2525 , 10, -20},
+                     {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  25,  25,  25, 25, 25, 10, -20},
+                    {-25,  10,  10,  10,  10,  10,  10, 10 , 10, -25},
+                    {-80, -25, -20, -20, -20, -20, -20, -20 , -25, -80},
+            };
+    
     public KOI(String name, int prof ) {
-        this.name = name;
-        this.profundidad = prof;
+        this._name = name;
+        this._profundidad = prof;
     }
 
     /**
-     * Decideix el moviment del jugador donat un tauler i un color de peça que
-     * ha de posar.
+     * Decide un movimiento para nuestro jugador dandole un tablero de juego.
+     * 
      *
-     * @param s Tauler i estat actual de joc.
-     * @return el moviment que fa el jugador.
+     * @param s Tablero y estado actual del juego.
+     * @return el movimiento que hace el jugador.
      */
     @Override
     public Move move(GameStatus s) {
         GameStatus aux = new GameStatus(s);
+        
         _mi_color = s.getCurrentPlayer();
-        nodosExp = 0;
-        System.out.println("Nosotros somos " + _mi_color + " enemigo es " + opposite(_mi_color));
-        //minmax(aux, profundidad, _mi_color , true , Integer.MIN_VALUE, Integer.MAX_VALUE);
-        minimax(aux, _mi_color, profundidad);
-        System.out.println(nodosExp);
-        long nodos = (long) nodosExp; 
-        _movElegido.setNumerOfNodesExplored(nodos);
+        _nodosExp = 0;
+        
+        minimax(aux, _mi_color, _profundidad);      //Llamada a la funcion minimax.
+        
+        long nodos = (long) _nodosExp; 
+        _movElegido.setNumerOfNodesExplored(nodos); //Le decimos los nodos explorados atraves del Move que jugaremos.
         return _movElegido;
     }
     
-     public int minimax(GameStatus tauler, CellType color, int profundidad){
+    /**
+     * Inicia el algoritmo minmax.
+     * 
+     *
+     * @param tauler Tablero y estado actual del juego.
+     * @param color El color de nuestro jugador.
+     * @param profundidad Profundidad a la que a de llegar el algoritmo.
+     * @return el mejor valor heuristico para nuestro jugador.
+     */    
+    public int minimax(GameStatus tauler, CellType color, int profundidad){
          
-        //valoracionMaxima guarda la mejor valoracion obtenida hasta el momento
-        int valoracionMaxima = Integer.MIN_VALUE;
-
+        
+        int mejorVal = Integer.MIN_VALUE;       //mejorVal guarda la mejor valoracion obtenida hasta el momento
          
         Move moveAux;
         ArrayList<Point> fichasAliadas = new ArrayList<>();
         int numAliadas = tauler.getNumberOfPiecesPerColor(color);
-        for(int i=0; i<numAliadas; i++) {
+        for(int i=0; i<numAliadas; i++) {       //Guardamos en una lista de Points las posiciones de las fichas aliadas.    
             fichasAliadas.add(tauler.getPiece(color, i));
-            //System.out.println("Fichas enemigas: " + tauler.getPiece(color,i) + " " + i);
+            
         }
         
         ArrayList<Move> movimientos = new ArrayList<>();       
         
-        for(int i = 0; i < fichasAliadas.size(); i++) {
-            //System.out.println("Movimiento posible: " + fichasAliadas.get(i) + " " + aux.getMoves(fichasAliadas.get(i)));
-            ArrayList<Point> movimientosFicha = tauler.getMoves(fichasAliadas.get(i));       
+        for(int i = 0; i < fichasAliadas.size(); i++) {     //Para cada ficha de la lista de fichas Aliadas cogeremos sus movimientos      
+            ArrayList<Point> movimientosFicha = tauler.getMoves(fichasAliadas.get(i));    
         
-            for(int j = 0; j < movimientosFicha.size(); j++) {
-                //System.out.println(aux.getPiece(color,i) + " " +  movimientosFicha.get(j));        
-                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), nodosExp, profundidad, SearchType.MINIMAX);
+            for(int j = 0; j < movimientosFicha.size(); j++) {    //Guardamos en una lista de Move cada movimiento de cada ficha aliada                   
+                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);
                 movimientos.add(moveAux);             
                            
            }    
         }
-
-
-        for(Move m  : movimientos){
-            //Creamos un tablero auxiliar y añadimos el movimiento actual
-            GameStatus aux = new GameStatus(tauler);
+        
+        for(Move m  : movimientos){             //Bucle para cada Move de cada ficha Aliada
+            
+            GameStatus aux = new GameStatus(tauler);        //Creamos un tablero auxiliar y añadimos el movimiento actual
             aux.movePiece(m.getFrom(), m.getTo());
-            nodosExp++;
+            _nodosExp++;
             
             if(aux.GetWinner() == color ) {
                 _movElegido = m;
-                return valoracionMaxima;
+                return mejorVal;
             }
            
-            //Obtenemos la valoración obtenida al ejecutar el algoritmo min
-            int valor = min(aux, opposite(color), Integer.MIN_VALUE, Integer.MAX_VALUE, profundidad-1, valoracionMaxima);
+          
+            int valor = min(aux, opposite(color), Integer.MIN_VALUE, 
+                                  Integer.MAX_VALUE, profundidad-1);     //Obtenemos la valoración obtenida al ejecutar el algoritmo min
 
-            //Si la valoración obtenida supera la valoración máxima guardada, substituimos la nueva valoración máxima
-            if(valor >= valoracionMaxima){
-                valoracionMaxima = valor;
+            
+            if(valor >= mejorVal){  //Si la valoracion "valor" supera la mejorValoracion la substituimos por esta
+                mejorVal = valor;
                 _movElegido = m;
             }
         }
         
-        //Retornamos la mejor columna obtenida tras ejecutar el algoritmo
-        return valoracionMaxima;
+        
+        return mejorVal;    //Return de la mejor valoracion para cada jugada.
     }
 
     /**
      * Ejecución del max del algoritmo minimax
      * 
      * @param tauler Tablero de juego
+     * @param color El color de nuestro jugador
      * @param alpha Alpha del algoritmo minimax
-     * @param beta Beta del algoritmo minimax
-     * @param depth Profundidad
-     * @param valoracionMaxima Mejor valoracion obtenida hasta el momento
-     * @return El valor máximo
+     * @param beta  Beta del algoritmo minmax
+     * @param profundidad Profundidad a la que nos encontramos en este punto del algoritmo.
+     * @return valor heuristico Maximo.
      */
-    private int max(GameStatus tauler, CellType color, int alpha, int beta, int profundidad, int valoracionMaxima){
-         int mejorTirada = Integer.MIN_VALUE; 
+    private int max(GameStatus tauler, CellType color, int alpha, int beta, int profundidad){
+        int mejorVal = Integer.MIN_VALUE; //mejorVal guarda la mejor valoracion obtenida hasta el momento
+        
         Move moveAux;  
         ArrayList<Point> fichasAliadas = new ArrayList<>();
         int numAliadas = tauler.getNumberOfPiecesPerColor(color);
-        for(int i=0; i<numAliadas; i++) {
+        for(int i=0; i<numAliadas; i++) {          //Guardamos en una lista de Points las posiciones de las fichas aliadas.   
             fichasAliadas.add(tauler.getPiece(color, i));
-            //System.out.println("Fichas enemigas: " + tauler.getPiece(color,i) + " " + i);
+            
         }
         
         ArrayList<Move> movimientos = new ArrayList<>();       
         
-        for(int i = 0; i < fichasAliadas.size(); i++) {
-            //System.out.println("Movimiento posible: " + fichasAliadas.get(i) + " " + aux.getMoves(fichasAliadas.get(i)));
+        for(int i = 0; i < fichasAliadas.size(); i++) {   //Para cada ficha de la lista de fichas Aliadas cogeremos sus movimientos        
             ArrayList<Point> movimientosFicha = tauler.getMoves(fichasAliadas.get(i));       
         
-            for(int j = 0; j < movimientosFicha.size(); j++) {
-                //System.out.println(aux.getPiece(color,i) + " " +  movimientosFicha.get(j));        
-                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), nodosExp, profundidad, SearchType.MINIMAX);
+            for(int j = 0; j < movimientosFicha.size(); j++) {    //Guardamos en una lista de Move cada movimiento de cada ficha aliada                   
+                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);
                 movimientos.add(moveAux);             
                            
            }    
         }
-        //Comprobamos si es el final de la profundidad o si no podemos mover ficha
-        if(tauler.GetWinner() == color ) {
-                     //System.out.println("Aqui ganamos");
+        
+        if(tauler.GetWinner() == color ) {      //Comprobamos si tenemos tablero ganador           
             return Integer.MAX_VALUE;
                     
-        }  else if(profundidad == 0 ){
+        }  else if(profundidad == 0 ){          //Comprobamos si estamos en profundidad 0 para calcular heuristica
             return evaluar(tauler);
             
         } else{
-            for(Move m : movimientos){
-                //Creamos un tablero auxiliar y añadimos el movimiento actual
-                GameStatus aux = new GameStatus(tauler);
+            for(Move m : movimientos){      //Bucle para cada Move de cada ficha Aliada
+                
+                GameStatus aux = new GameStatus(tauler);    //Creamos un tablero auxiliar y añadimos el movimiento actual
                 aux.movePiece(m.getFrom(), m.getTo());
-                nodosExp++;
-                //Si la jugada actual es ganadora, retornamos un +∞
-                if(tauler.GetWinner() == color) {
-    
+                _nodosExp++;
+                
+                if(tauler.GetWinner() == color) {   //Comprobamos si el ultimo movimiento añadido es ganador.    
                    return Integer.MAX_VALUE;
                 }  
 
-                //Llama la función min para analizar la siguiente jugada del rival
-                int valor = min(aux, opposite(color), alpha, beta, profundidad - 1, valoracionMaxima);
-                if(valor >= mejorTirada) {
-                   mejorTirada = valor;
+                
+                int valor = min(aux, opposite(color), alpha, beta, profundidad - 1);    //Obtenemos la valoración obtenida al ejecutar el algoritmo min
+               
+                if(valor >= mejorVal) { //Si la valoracion "valor" supera la mejorValoracion la substituimos por esta
+                   mejorVal = valor;
                    alpha = Math.max(alpha, valor);
 
-                   if(beta <= alpha ) {
+                   if(beta <= alpha ) {     //Hacemos la poda alpha-beta 
 
                        break;
                    }
                }
-                /*alpha = Math.max(alpha, valor);
-                
-                //Aplicamos la poda alpha beta
-                if(alpha >= beta){
-                    break;
-                }*/
             }
             
             return alpha;
@@ -198,74 +214,67 @@ public class KOI implements IPlayer, IAuto {
      * Ejecución del min del algoritmo minimax
      * 
      * @param tauler Tablero de juego
+     * @param color El color de nuestro jugador
      * @param alpha Alpha del algoritmo minimax
-     * @param beta Beta del algoritmo minimax
-     * @param depth Profundidad
-     * @param valoracionMaxima Mejor valoracion obtenida hasta el momento
-     * @return El valor mínimo
+     * @param beta  Beta del algoritmo minmax
+     * @param profundidad Profundidad a la que nos encontramos en este punto del algoritmo.
+     * @return valor heuristico Minimo.
      */
-    private int min(GameStatus tauler, CellType color , int alpha, int beta, int profundidad, int valoracionMaxima) { 
+    private int min(GameStatus tauler, CellType color , int alpha, int beta, int profundidad) { 
         
-        int mejorTirada = Integer.MAX_VALUE; 
+        int mejorVal = Integer.MAX_VALUE;       //mejorVal guarda la peor valoracion obtenida hasta el momento
+        
         Move moveAux;
         ArrayList<Point> fichasEnemigas = new ArrayList<>();
         int numEnemigas = tauler.getNumberOfPiecesPerColor(color);
-        for(int i=0; i<numEnemigas; i++) {
+        for(int i=0; i<numEnemigas; i++) {      //Guardamos en una lista de Points las posiciones de las fichas enemigas.   
             fichasEnemigas.add(tauler.getPiece(color, i));
-            //System.out.println("Fichas enemigas: " + tauler.getPiece(color,i) + " " + i);
+            
         }
         
         ArrayList<Move> movimientos = new ArrayList<>();       
         
-        for(int i = 0; i < fichasEnemigas.size(); i++) {
-            //System.out.println("Movimiento posible: " + fichasEnemigas.get(i) + " " + aux.getMoves(fichasEnemigas.get(i)));
+        for(int i = 0; i < fichasEnemigas.size(); i++) {        //Para cada ficha de la lista de fichas enemiga cogeremos sus movimientos         
             ArrayList<Point> movimientosFicha = tauler.getMoves(fichasEnemigas.get(i));       
         
-            for(int j = 0; j < movimientosFicha.size(); j++) {
-                            
-                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), nodosExp, profundidad, SearchType.MINIMAX);
+            for(int j = 0; j < movimientosFicha.size(); j++) {      //Guardamos en una lista de Move cada movimiento de cada ficha enemiga                             
+                moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);
                 movimientos.add(moveAux);             
                            
            }    
         }
-        //Comprobamos si es el final de la profundidad o si no podemos mover ficha
+     
        
-        if(tauler.GetWinner() == color ) {
-                     //System.out.println("Aqui ganamos");
+        if(tauler.GetWinner() == color ) {  //Comprobamos si tienen tablero ganador                       
             return Integer.MIN_VALUE;
                     
-        }  else if(profundidad == 0 ){
+        }  else if(profundidad == 0 ){      //Comprobamos si estamos en profundidad 0 para calcular heuristica
             return evaluar(tauler);
             
         } else{
-            for(Move m : movimientos){
-                //Creamos un tablero auxiliar y añadimos el movimiento actual
-                GameStatus aux = new GameStatus(tauler);
+            for(Move m : movimientos){      //Bucle para cada Move de cada ficha Aliada
+                
+                GameStatus aux = new GameStatus(tauler);    //Creamos un tablero auxiliar y añadimos el movimiento actual
                 aux.movePiece(m.getFrom(), m.getTo());
-                nodosExp++;
-                //Si la jugada actual es ganadora, retornamos un -∞          
-                if(tauler.GetWinner() == color) { 
+                _nodosExp++;
+                        
+                if(tauler.GetWinner() == color) {   //Comprobamos si el ultimo movimiento añadido es ganador. 
      
                    return Integer.MIN_VALUE;
                    
                 }              
                 
-                //Llama la función max para analizar la siguiente jugada
-                int valor = max(aux, opposite(color), alpha, beta, profundidad - 1, valoracionMaxima);
-                if(valor <= mejorTirada) {
-                  mejorTirada = valor;             
+                
+                int valor = max(aux, opposite(color), alpha, beta, profundidad - 1);    //Obtenemos la valoración obtenida al ejecutar el algoritmo max
+                
+                if(valor <= mejorVal) {     //Si la valoracion "valor" es peor que la mejorValoracion la substituimos por esta
+                  mejorVal = valor;             
                   beta = Math.min(beta, valor);
 
-                  if(beta <= alpha ) {                    
+                  if(beta <= alpha ) {     //Hacemos la poda alpha-beta                  
                       break;
                   }
               }
-                /*beta = Math.min(beta, valor);
-                
-                //Aplicamos la poda alpha beta
-                if(alpha >= beta){
-                    break;
-                } */
             }
         }
         
@@ -273,80 +282,115 @@ public class KOI implements IPlayer, IAuto {
     }
     
 
-    
+     /**
+     * Funcion para evaluar la heuristica de un tablero en su estado.
+     * 
+     * @param tauler Tablero de juego con un estado de juego
+     * @return valor heuristico del tablero en base al analisis de fichas aliadas y enemigas.
+     */
     public int evaluar(GameStatus tauler) {
-        //System.out.println("Analizando heuristica de:");
-        //System.out.println(tauler.toString());
         
-        CellType color = _mi_color;
+        CellType color = _mi_color; //Guardamos el color de las piezas aliadas
         
         ArrayList<Point> fichasEnemigas = new ArrayList<>();
         int numEnemigas = tauler.getNumberOfPiecesPerColor(opposite(color));
-        for(int i=0; i<numEnemigas; i++) {
+        for(int i=0; i<numEnemigas; i++) {  //Guardamos en una lista de Points las posiciones de las fichas enemigas.
             fichasEnemigas.add(tauler.getPiece(opposite(color), i));
             
         }
         
         ArrayList<Point> fichasAliadas = new ArrayList<>();
         int numAliadas = tauler.getNumberOfPiecesPerColor(color);
-        for(int i=0; i<numAliadas; i++) {
+        for(int i=0; i<numAliadas; i++) {   //Guardamos en una lista de Points las posiciones de las fichas aliadas.
             fichasAliadas.add(tauler.getPiece(color, i));
             
         }
         
-        int heuAliada = -distanciaPiezas(fichasAliadas) + valorTauler(fichasAliadas) + movimientos(fichasAliadas, tauler);
-        int heuEnemiga = -distanciaPiezas(fichasEnemigas) + valorTauler(fichasEnemigas) + movimientos(fichasEnemigas, tauler) ;
-        int heuristicaTotal = heuAliada - heuEnemiga;
+        
+        int heuAliada = -distanciaPiezas(fichasAliadas) //LLamamos a la funcion distanciaPiezas para las fichas aliadas
+                            + valorTablero(fichasAliadas)    //Llamamos a la funcion valorTablero para las fichas aliadas
+                                + movimientos(fichasAliadas, tauler);   //Llamamos a la funcion de movimientos para las fichas aliadas.
+        
+        int heuEnemiga = -distanciaPiezas(fichasEnemigas) //LLamamos a la funcion distanciaPiezas para las fichas enemigas
+                            + valorTablero(fichasEnemigas)      //Llamamos a la funcion valorTablero para las fichas enemigas
+                                + movimientos(fichasEnemigas, tauler) ;     //Llamamos a la funcion de movimientos para las fichas enemigas.
+        
+        
+        int heuristicaTotal = heuAliada - heuEnemiga;   //Sacamos una heuristica restando la heuristica aliada con la enemiga calculada anteriormente.
         
         
         return heuristicaTotal;
     }
-    
+ 
+
+   /**
+   * Funcion que nos da valor cuantos mas movimientos puede realizar nuestras fichas.
+   * 
+   * @param fichasPos Lista de la posicion de las fichas de un equipo
+   * @param tauler Tablero de juego con un estado de juego
+   * @return valor segun el numero de movimientos de un equipo.
+   */
    public int movimientos(ArrayList<Point> fichasPos, GameStatus tauler) {
        int numMovimientos = 0;
-       for(Point i : fichasPos) {
+       for(Point i : fichasPos) { //Recorremos cada ficha
            
            ArrayList<Point> movimientosFicha = tauler.getMoves(i);  
         
-            for(int j = 0; j < movimientosFicha.size(); j++) {                            
+            for(int j = 0; j < movimientosFicha.size(); j++) {   //Añadimos un movimiento por cada movimiento de una ficha                         
                 numMovimientos++;            
                            
            } 
        }
-       return numMovimientos * 3;
+       return numMovimientos * 3;   
    }
-   public int valorTauler(ArrayList<Point> fichasPos) {
+   
+   /**
+   * Funcion que nos da valor segun la posicion donde tiene las fichas un equipo.
+   * 
+   * @param fichasPos Lista de la posicion de las fichas de un equipo
+   * @return valor segun la posicion de nuestras fichas en el tablero.
+   */
+   public int valorTablero(ArrayList<Point> fichasPos) {
        int valor = 0;
-       for(Point i : fichasPos) {
+       for(Point i : fichasPos) {   //Recorremos para cada ficha
            int x1 = i.x;
            int x2 = i.y;
-           valor += tableroP[x1][x2];
+           valor += tableroP[x1][x2];   //Valor de cada celda del tablero siguiendo tableroP 
            
        }
        valor = valor *2 ;
-       //System.out.println("Valor " + valor);       
+            
        return valor;
    }
-    public int cantidadFichas() {
-       return 1; 
-    }
+   
+   
+   /**
+   * Funcion que nos da valor segun las distancias que hay entre las diferentes piezas de un equipo.
+   * 
+   * @param fichasPos Lista de la posicion de las fichas de un equipo
+   * @return valor segun la distancias de las diferentes piezas de un equipo.
+   */
     public int distanciaPiezas(ArrayList<Point> fichasPos) {
         int distancia = 0;
        
-        for(Point i : fichasPos) {
-            for(Point j : fichasPos) {
+        for(Point i : fichasPos) {  //Recorremos para cada pieza de un equipo
+            for(Point j : fichasPos) {  //Comparamos cada pieza con todas las demas piezas del tablero de un equipo
                 if(i != j) {
-                    int x1 = i.x;
+                    int x1 = i.x;   //Cogemos las posiciones x , y de ambas fichas de comparamos
                     int y1 = i.y;
                     int x2 = j.x;
                     int y2 = j.y;
-                    double dist = Math.sqrt(Math.pow((y2 - y1),2) + Math.pow((x2 - x1), 2));                    
-                    distancia += (int) dist;                    
+                    double dist = Math.sqrt(Math.pow((y2 - y1),2) 
+                                                + Math.pow((x2 - x1), 2));  //Calculamos la distancia restando las mismas coordenadas de cada pieza                
+                                                                            //y hacemos la suma de las potencias de estos valores y relizamos
+                                                                            //la raiz para obtener un valor para la diferencia de distancia entre piezas
+                    
+                    distancia += (int) dist;  //Sumamos estos valores en una misma variable                   
+                                                                                    
                 }
             }
-        }
+        }        
         
-        //System.out.println("Distancia " + distancia);
         return distancia;
     }
     /**
@@ -366,7 +410,7 @@ public class KOI implements IPlayer, IAuto {
      */
     @Override
     public String getName() {
-        return "KOI(" + name + ")";
+        return "KOI(" + _name + ")";
     }
     
     
