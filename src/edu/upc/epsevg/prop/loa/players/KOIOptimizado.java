@@ -25,7 +25,7 @@ import java.util.Comparator;
  * @author Roger Tarres Mercader
  * @author Josep Marches Parra
  */
-public class KOI implements IPlayer, IAuto {
+public class KOIOptimizado implements IPlayer, IAuto {
     
    
     String _name;               //Variable global con el nombre de nuestro jugador.      
@@ -47,18 +47,18 @@ public class KOI implements IPlayer, IAuto {
     
     int[][] tableroP10 = new int[][]{ //10 x 10
                     {-80, -25, -20, -20, -20, -20, -20, -20 , -25, -80},
-                    {-25,  10,  10,  10,  10,  10,  10, 10  , 10 , -25},
-                    {-20,  10,  25,  25,  25,  25,  25, 25,    10, -20},
-                    {-20,  10,  25,  50,  50,  50,  25, 25 ,   10, -20},
-                    {-20,  10,  25,  50,  50,  50,  25, 25 ,   10, -20},
-                    {-20,  10,  25,  50,  50,  50, 25 , 25,    10, -20},
-                    {-20,  10,  25,  50,  50,  50,  25, 25    ,10, -20},
-                    {-20,  10,  25,  25,  25,  25, 25,  25,    10, -20},
-                    {-25,  10,  10,  10,  10,  10,  10, 10 ,   10, -25},
+                    {-25,  10,  10,  10,  10,  10,  10, 10 , 10, -25},
+                    {-20,  10,  25,  25,  25,  25, 25, 25, 10, -20},
+                    {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  50,  50,  50, 2525 , 10, -20},
+                     {-20,  10,  25,  50,  50,  50,  25, 25 , 10, -20},
+                    {-20,  10,  25,  25,  25,  25, 25, 25, 10, -20},
+                    {-25,  10,  10,  10,  10,  10,  10, 10 , 10, -25},
                     {-80, -25, -20, -20, -20, -20, -20, -20 , -25, -80},
             };
     
-    public KOI(String name, int prof ) {
+    public KOIOptimizado(String name, int prof ) {
         this._name = name;
         this._profundidad = prof;
     }
@@ -123,14 +123,26 @@ public class KOI implements IPlayer, IAuto {
             for(int j = 0; j < movimientosFicha.size(); j++) {    //Guardamos en una lista de Move cada movimiento de cada ficha aliada 
                 
                 moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);     
-                movimientos.add(moveAux); 
-                                  
+                //movimientos.add(moveAux); 
+                GameStatus aux2 = new GameStatus(tauler); 
+                aux2.movePiece(moveAux.getFrom(),moveAux.getTo());                
+                int tempHeu = evaluar(aux2);
+                Moving  moving = new Moving();
+                moving.move = moveAux;
+                moving.heu = tempHeu;
+                maux.add(moving);
+                aux2 = tauler;                                   
                
                            
            }    
         }
         
-
+        Collections.sort(maux,Comparator.comparing(Moving::getHeu).reversed());
+        
+        for(Moving m: maux) { 
+           
+           movimientos.add(m.move);
+        }
                 
         for(Move m  : movimientos){             //Bucle para cada Move de cada ficha Aliada
             
@@ -186,13 +198,25 @@ public class KOI implements IPlayer, IAuto {
         
             for(int j = 0; j < movimientosFicha.size(); j++) {    //Guardamos en una lista de Move cada movimiento de cada ficha aliada                   
                 moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);
-                movimientos.add(moveAux);
-        
+                //movimientos.add(moveAux);
+                GameStatus aux2 = new GameStatus(tauler); 
+                aux2.movePiece(moveAux.getFrom(),moveAux.getTo());                
+                int tempHeu = evaluar(aux2);
+                Moving  moving = new Moving();
+                moving.move = moveAux;
+                moving.heu = tempHeu;
+                maux.add(moving);
+                aux2 = tauler;
                            
            }    
         }
         
-  
+        Collections.sort(maux,Comparator.comparing(Moving::getHeu).reversed());
+        
+        for(Moving m: maux) {  
+           
+           movimientos.add(m.move);
+        } 
         
         if(tauler.GetWinner() == color ) {      //Comprobamos si tenemos tablero ganador           
             return Integer.MAX_VALUE;
@@ -258,14 +282,25 @@ public class KOI implements IPlayer, IAuto {
         
             for(int j = 0; j < movimientosFicha.size(); j++) {      //Guardamos en una lista de Move cada movimiento de cada ficha enemiga                             
                 moveAux = new Move(tauler.getPiece(color,i), movimientosFicha.get(j), _nodosExp, profundidad, SearchType.MINIMAX);
-                movimientos.add(moveAux);                
-             
+                //movimientos.add(moveAux);                
+                GameStatus aux2 = new GameStatus(tauler); 
+                aux2.movePiece(moveAux.getFrom(),moveAux.getTo());                
+                int tempHeu = evaluar(aux2);
+                Moving  moving = new Moving();
+                moving.move = moveAux;
+                moving.heu = tempHeu;
+                maux.add(moving);
                 
                            
            }    
         }
         
-     
+        Collections.sort(maux,Comparator.comparing(Moving::getHeu));
+       
+        for(Moving m: maux) {  
+           
+           movimientos.add(m.move);
+        }    
        
         if(tauler.GetWinner() == color ) {  //Comprobamos si tienen tablero ganador                       
             return Integer.MIN_VALUE;

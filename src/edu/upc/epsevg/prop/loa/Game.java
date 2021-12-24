@@ -20,12 +20,12 @@ public class Game {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                
+            
                 //IPlayer player1 = new KOI("Messi",2);
-                IPlayer player1 = new KOITimeout("Dembele");
-                //IPlayer player1 = new RandomPlayer("Crazy Chris");
-                //IPlayer player1 = new HumanPlayer("Josep");
-                IPlayer player2 = new MCCloudPlayer();             
+                //IPlayer player1 = new KOITimeout("Dembele");
+                IPlayer player1 = new KOIOptimizado("CR7",2);    
+                IPlayer player2 = new MCCloudPlayer();
+                //IPlayer player2 = new RandomPlayer("Roger");
                 new Board(player1 , player2, 3, Level.DIFFICULT);
              }
         });

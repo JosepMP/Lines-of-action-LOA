@@ -71,7 +71,8 @@ public class KOITimeout implements IPlayer, IAuto {
         _mi_color = s.getCurrentPlayer();
         _nodosExp = 0;
         _time = true;
-        int profundidad = 1;
+        
+        int profundidad = 1;        
         while(_time) {      //Si estamos dentro del tiempode juego volvemos a hacer otra llamada al algorimto minimax con mas profundidad.
             minimax(aux, _mi_color, profundidad);   //Llama a la funcion minimax
             if(_time) {     //Si acabamos la busqueda dentro del tiempo damos por valido el mejor movimiento.   
